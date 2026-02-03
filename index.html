@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Valentine Quiz 💖</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  padding:0;
+  background:#f6d1d1;
+  font-family:Arial, sans-serif;
+  text-align:center;
+  color:#800000;
+}
+
+#scoreCard{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:white;
+  padding:10px 22px;
+  border-radius:25px;
+  font-weight:bold;
+}
+
+#questionBox{
+  margin:30px auto 20px;
+  padding:35px 50px;
+  max-width:90%;
+  background:white;
+  border-radius:35px;
+  font-family:'Allura', cursive;
+  font-size:38px;
+}
+
+#questionImage{
+  display:none;
+  max-width:380px;
+  margin:15px auto;
+  border-radius:20px;
+}
+
+#answersContainer{
+  max-width:520px;
+  margin:0 auto;
+  background:white;
+  padding:25px 35px;
+  border-radius:28px;
+  text-align:left;
+}
+
+.answer{
+  padding:14px 18px;
+  margin:12px 0;
+  background:#e2bcbc;
+  border-radius:20px;
+  font-size:22px;
+  cursor:pointer;
+}
+
+.answer:hover{
+  background:#d69a9a;
+}
+
+#nextBtn{
+  display:none;
+  margin:25px auto 40px;
+  padding:14px 40px;
+  font-size:20px;
+  border-radius:25px;
+  border:none;
+  background:#800000;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+#popup{
+  position:fixed;
+  top:25%;
+  left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  background:white;
+  padding:22px 32px;
+  border-radius:20px;
+  font-size:20px;
+  opacity:0;
+  transition:0.3s ease;
+  z-index:2000;
+}
+
+#popup.show{
+  opacity:1;
+  transform:translate(-50%,-50%) scale(1);
+}
+
+.rose{
+  position:absolute;
+  font-size:30px;
+  animation:float 4s linear forwards;
+}
+
+@keyframes float{
+  from{transform:translateY(0);opacity:1;}
+  to{transform:translateY(-400px);opacity:0;}
+}
+</style>
+</head>
+
+<body>
+
+<div id="scoreCard">Awesomeness Score: 0</div>
+
+<div id="questionBox"></div>
+<img id="questionImage">
+<div id="answersContainer"></div>
+<button id="nextBtn">Next</button>
+<div id="popup"></div>
+
+<script>
+const TOTAL_QUESTIONS = 5;
+
+const quiz = [
+  {
+    q:"Where Did We First Meet?",
+    a:[
+      {t:"In Coffee Shop! ☕",c:false,m:"Cute guess 😄"},
+      {t:"At The Library 📚",c:false,m:"Smart choice!Do you really visit them? 😎"},
+      {t:"In A Dream 🌙",c:false,m:"Oooh Dreamy… Almost! 😏"},
+      {t:"Somewhere My Heart Already Knew ❤️",c:true,m:"Exactly! My Heart Knew You First 😍💘"}
+    ]
+  },
+  {
+    q:"What Did I Fall For In You?",
+    a:[
+      {t:"Your Laugh 🤣",c:false,m:"It *is* musically addictive 😜"},
+      {t:"Your Kindness 💖",c:false,m:"Sweet, But There’s More 😉🥰"},
+      {t:"Your Quirks 😏",c:false,m:"Adorable quirkiness! 😆"},
+      {t:"Sparkly Eyes and Everything! ❤️",c:true,m:"Bingo! Every Little Thing Stole My Heart 💘🌹💘"}
+    ]
+  },
+  {
+   q:"Where Was This Picture Taken? (Hint: Magical ✨)",
+    img: "image.jpg",
+    a: [
+      {t:"In Our Dreamland 🌈", c:false, m:"Close! Feels Magical 😄"},
+      {t:"Under The Stars ✨", c:false, m:"Almost… But Think Romantic 😏"},
+      {t:"At A Secret Waterfall 🌊", c:false, m:"Not Quite, But Nice Try 😆"},
+      {t:"In Our Hearts ❤️", c:true, m:"Exactly! Memory Lives Here 😍💖"}
+    ]
+  },
+  {
+    q:"Where Should We Plan Our Next Date?",
+    a:[
+      {t:"Rainbow Picnic 🌈",c:false,m:"Colorful chaos 😆"},
+      {t:"Stargazing 🌌",c:false,m:"Ooo dreamy 😍"},
+      {t:"Chocolate Island 🍫",c:false,m:"Dangerously Yummy idea 😂"},
+      {t:"In Each Other's Arms ❤️",c:true,m:"Perfect!Just us in Each other's arms 🥰"}
+    ]
+  },
+  { q:"Will You Be My Valentine?", final:true }
+];
+
+let index = 0;
+let score = 0;
+
+const qBox = document.getElementById("questionBox");
+const aBox = document.getElementById("answersContainer");
+const img = document.getElementById("questionImage");
+const nextBtn = document.getElementById("nextBtn");
+const popup = document.getElementById("popup");
+const scoreCard = document.getElementById("scoreCard");
+
+function showPopup(text,time=3500){
+  popup.innerText=text;
+  popup.classList.add("show");
+  setTimeout(()=>popup.classList.remove("show"),time);
+}
+
+function roses(n){
+  for(let i=0;i<n;i++){
+    const r=document.createElement("div");
+    r.className="rose";
+    r.innerText="🌹";
+    r.style.left=Math.random()*90+"%";
+    r.style.bottom="0";
+    document.body.appendChild(r);
+    setTimeout(()=>r.remove(),4000);
+  }
+}
+
+function load(){
+  const q = quiz[index];
+  let questionScored = false;
+
+  qBox.innerText = `${index+1}. ${q.q}`;
+  aBox.innerHTML="";
+  nextBtn.style.display="none";
+
+  if(q.img){
+    img.src=q.img;
+    img.style.display="block";
+  } else img.style.display="none";
+
+  if(q.final){
+    const yes=document.createElement("button");
+    const no=document.createElement("button");
+
+    yes.innerText="Yes 💖";
+    no.innerText="No 😏";
+
+    yes.style.padding=no.style.padding="14px 32px";
+    yes.style.fontSize=no.style.fontSize="22px";
+    yes.style.borderRadius=no.style.borderRadius="25px";
+
+    aBox.appendChild(yes);
+    document.body.appendChild(no);
+
+    const msgs=[ "Haha! Try again, SEXY BOIIII! 😜","Like Seriously??You don't want? ;-)💖","Come on… Don't be shy! 😏",
+      "You know the answer… 😘","NO is NOT in my dictionary! 😆",
+      "Try again… but it's a trap! 😜","The No button is allergic to clicks! 😂",
+      "Seriously, click YES! 🥰","Nope! Not happening 😎",
+      "The universe says YESss! 🌌","Your heart already said YES!!! ❤️"];
+    let tries=0;
+
+    function moveNo(){
+      no.style.position="absolute";
+      no.style.left=Math.random()*(window.innerWidth-120)+"px";
+      no.style.top=Math.random()*(window.innerHeight-120)+"px";
+      showPopup(msgs[tries%msgs.length],4000);
+      tries++;
+    }
+
+    no.onmouseover=moveNo;
+    no.onclick=moveNo;
+
+    yes.onclick=()=>{
+      score=TOTAL_QUESTIONS;
+      scoreCard.innerText=`Awesomeness Score: ${score}`;
+      qBox.innerHTML="💖🥰 YAYYYYY!!! 🥰💖<br><br>My Bangaru said YES 😭❤️<br><br>Thank you for being my Valentine 💘🌹✨";
+      aBox.style.display="none";
+      img.style.display="none";
+      no.remove();
+      roses(40);
+    };
+
+  } else {
+    q.a.forEach(ans=>{
+      const d=document.createElement("div");
+      d.className="answer";
+      d.innerText=ans.t;
+
+      d.onclick=()=>{
+        showPopup(ans.m);
+
+        if(ans.c && !questionScored){
+          questionScored=true;
+          score++;
+          nextBtn.style.display="block";
+          roses(6);
+        }
+        else if(!ans.c && questionScored){
+          questionScored=false;
+          score--;
+          nextBtn.style.display="none";
+        }
+
+        scoreCard.innerText=`Awesomeness Score: ${score}`;
+      };
+
+      aBox.appendChild(d);
+    });
+  }
+}
+
+nextBtn.onclick=()=>{
+  index++;
+  load();
+};
+
+load();
+</script>
+
+</body>
+</html>
